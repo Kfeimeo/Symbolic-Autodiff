@@ -130,19 +130,20 @@ def plot_exec(df, out_dir, suite, xkey, title, fname):
 
 
 def plot_speedup(df, out_dir):
-    sub = df[df.backend.isin(["dag", "torch"]) & (df.suite != "warmup")]
-    if sub.empty:
+    dag = df[(df.backend == "dag") & (df.suite != "warmup")]
+    torch = df[(df.backend == "torch") & (df.suite != "warmup")]
+    if dag.empty or torch.empty:
         return
-    piv = sub.pivot_table(index=["suite", "label", "total_defined_bytes"], columns="backend",
-                          values=["fwd_median_us", "bwd_median_us", "total_median_us"], aggfunc="first")
-    piv = piv.dropna()
-    bytes_ = piv.index.get_level_values("total_defined_bytes").astype(float)
+    m = dag.merge(torch, on=["suite", "label"], suffixes=("_dag", "_torch"))
+    bytes_ = m.total_defined_bytes_dag.astype(float) / 1024 / 1024
     fig, ax = plt.subplots(figsize=(7, 4.5))
-    for key, lab, mk in [("fwd_median_us", "forward", "o"), ("bwd_median_us", "backward", "s"), ("total_median_us", "fwd+bwd", "^")]:
-        ratio = piv[(key, "torch")] / piv[(key, "dag")]
-        ax.scatter(bytes_ / 1024 / 1024, ratio, marker=mk, label=lab, alpha=0.7)
+    for key, lab, mk in [("fwd_median_us", "forward", "o"), ("bwd_median_us", "backward", "s"),
+                         ("total_median_us", "fwd+bwd", "^")]:
+        ratio = m[key + "_torch"] / m[key + "_dag"]
+        ax.scatter(bytes_, ratio, marker=mk, label=lab, alpha=0.7)
     ax.axhline(1.0, color="k", lw=0.8)
     ax.set_xscale("log")
+    ax.set_yscale("log")
     ax.set_xlabel("logical bytes defined by the fwd+bwd program (MiB)")
     ax.set_ylabel("LibTorch Autograd time / DAG executor time")
     ax.set_title("Speed ratio vs problem size (>1: DAG executor faster)")

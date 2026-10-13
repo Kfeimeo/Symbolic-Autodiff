@@ -49,3 +49,6 @@ target_link_libraries(sad_bench PRIVATE sad_exec)
 
 enable_testing()
 add_test(NAME sad_tests COMMAND sad_tests)
+
+add_executable(sad_scaling benchmarks/scaling_main.cpp)
+target_link_libraries(sad_scaling PRIVATE sad_core)

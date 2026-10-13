@@ -63,6 +63,19 @@ void CsvTable::add(const Row& r) {
   rows_.push_back(r);
 }
 
+namespace {
+std::string csv_escape(const std::string& v) {
+  if (v.find_first_of(",\"\n") == std::string::npos) return v;
+  std::string out = "\"";
+  for (char c : v) {
+    if (c == '"') out += '"';
+    out += c;
+  }
+  out += '"';
+  return out;
+}
+}  // namespace
+
 std::string CsvTable::to_string() const {
   std::ostringstream os;
   for (size_t i = 0; i < columns_.size(); ++i) {
@@ -73,7 +86,7 @@ std::string CsvTable::to_string() const {
   for (const auto& r : rows_) {
     for (size_t i = 0; i < columns_.size(); ++i) {
       if (i) os << ',';
-      if (const auto* v = r.get(columns_[i])) os << *v;
+      if (const auto* v = r.get(columns_[i])) os << csv_escape(*v);
     }
     os << '\n';
   }

@@ -29,9 +29,11 @@ reference. `REPORT.md` contains the measurements and the analysis.
 | `include/sad/torch_baseline.hpp` | Baseline C: eager LibTorch + `torch::autograd::grad` |
 | `include/sad/tasks.hpp` | Parametrised tasks written once, instantiated for all three backends |
 | `tests/` | Unit tests (structural + numerical against Autograd) |
-| `benchmarks/bench_main.cpp` | Benchmark driver, CSV output |
-| `scripts/` | LibTorch download, one-shot benchmark run, plotting |
-| `results/` | CSV, logs and figures of the last run |
+| `benchmarks/bench_main.cpp` | Benchmark driver (`sad_bench`), CSV output |
+| `benchmarks/scaling_main.cpp` | Torch-free micro-benchmark (`sad_scaling`) of build / differentiation cost per node |
+| `scripts/` | LibTorch download, one-shot benchmark run, plotting, Markdown tables |
+| `results/` | CSV, logs, tables and figures of the last run |
+| `REPORT.md` | Measurements and analysis (answers to the five research questions) |
 
 ## Building
 
@@ -43,12 +45,15 @@ for the plots.
 scripts/setup_libtorch.sh            # downloads LibTorch CPU into third_party/libtorch
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release   # or -DCMAKE_PREFIX_PATH=/path/to/libtorch
 cmake --build build -j$(nproc)
-./build/sad_tests                    # 21 unit tests
+./build/sad_tests                    # 22 unit tests
 ./build/sad_bench --suite quick      # a fast sanity benchmark
 ```
 
 `scripts/run_benchmarks.sh [suite]` builds, tests, runs the suite, writes
 `results/<suite>.csv` + `results/<suite>.log` and renders figures.
+`scripts/make_tables.py results/results.csv` prints the Markdown tables used
+in `REPORT.md`; `./build/sad_scaling [reps] [nohc]` prints the torch-free
+scaling micro-benchmark.
 
 ```
 sad_bench [--suite all|quick|chain|sharing|diamond|nn|mlp|scaling] [--csv path]
