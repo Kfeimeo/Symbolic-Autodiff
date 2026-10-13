@@ -14,7 +14,7 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release ${CMAKE_PREFIX_PATH:+-DCMAKE_PREF
 cmake --build build -j"$(nproc)"
 ./build/sad_tests
 mkdir -p results
-./build/sad_bench --suite "$SUITE" --csv "results/${SUITE}.csv" "$@" | tee "results/${SUITE}.log"
+./build/sad_bench --suite "$SUITE" --malloc-stable --csv "results/${SUITE}.csv" "$@" | tee "results/${SUITE}.log"
 if python3 -c "import matplotlib, pandas" 2>/dev/null; then
   python3 scripts/plot_results.py "results/${SUITE}.csv" results
 else

@@ -2,6 +2,8 @@
 // LibTorch eager Autograd on identical, parametrised tasks.
 #include <torch/torch.h>
 
+#include <malloc.h>
+
 #include <cstdio>
 #include <cstring>
 #include <iostream>
@@ -30,10 +32,17 @@ struct Options {
   int warmup = 3;
   uint64_t tree_cap = 2000000;
   uint64_t seed = 42;
+  int graph_repeats = 5;  // build/diff/compile are repeated; medians reported
   bool skip_tree = false;
   bool skip_nohc = false;
+  bool torch_first = false;   // run the torch baseline before the DAG backends
+  bool malloc_stable = false; // disable glibc mmap/trim so freed memory is reused
   bool verbose = false;
   std::string dtype = "f32";
+  // Single configuration overrides (--task selects this mode).
+  std::string task;
+  int64_t n = -1, batch = -1, in = -1, hidden = -1, out = -1;
+  int depth = -1, width = -1, sharing = -1;
 };
 
 double rtol_for(DType dt) { return dt == DType::Float64 ? 1e-9 : 1e-4; }
@@ -56,6 +65,8 @@ Row base_row(const TaskParams& p, const Options& o, const char* backend) {
   r.set("threads", o.threads);
   r.set("repeats", o.repeats);
   r.set("warmup", o.warmup);
+  r.set("torch_first", o.torch_first);
+  r.set("malloc_stable", o.malloc_stable);
   return r;
 }
 
@@ -74,7 +85,30 @@ Row run_dag(const TaskParams& p, const Options& o, bool hashcons,
   Row r = base_row(p, o, hashcons ? "dag" : "dag_nohc");
   r.set("hashcons", hashcons);
 
-  // Build the forward DAG.
+  // Graph construction, symbolic differentiation and SLP compilation are
+  // repeated on fresh graphs; the first sample is reported as the cold cost
+  // and the median as the steady cost.
+  std::vector<double> build_s, diff_s, compile_s;
+  for (int rep = 0; rep + 1 < o.graph_repeats; ++rep) {
+    Timer t;
+    Graph g2(hashcons);
+    GraphBuilder b2(g2);
+    DagBackend be2{b2, p.dtype};
+    const NodeId loss2 = build_task(be2, p);
+    build_s.push_back(t.us());
+    t.reset();
+    GradResult gr2 = backward(b2, loss2, g2.inputs());
+    diff_s.push_back(t.us());
+    t.reset();
+    std::vector<NodeId> outs2{loss2};
+    outs2.insert(outs2.end(), gr2.grads.begin(), gr2.grads.end());
+    SLP full2 = compile(g2, outs2);
+    const NodeId fwd_out2[1] = {loss2};
+    SLP fwd2 = compile(g2, fwd_out2);
+    compile_s.push_back(t.us());
+  }
+
+  // Build the forward DAG (the instance that is executed below).
   const uint64_t malloc0 = malloc_in_use_bytes();
   Timer t;
   Graph g(hashcons);
@@ -99,6 +133,9 @@ Row run_dag(const TaskParams& p, const Options& o, bool hashcons,
   SLP fwd = compile(g, fwd_out);
   const double compile_us = t.us();
   const uint64_t graph_malloc = malloc_in_use_bytes() - malloc0;
+  build_s.push_back(build_us);
+  diff_s.push_back(diff_us);
+  compile_s.push_back(compile_us);
 
   r.set("fwd_nodes", fwd_nodes);
   r.set("bwd_nodes", gr.stats.backward_nodes());
@@ -117,9 +154,13 @@ Row run_dag(const TaskParams& p, const Options& o, bool hashcons,
   r.set("graph_malloc_bytes", graph_malloc);
   r.set("static_peak_live_bytes", full.static_peak_live_bytes());
   r.set("total_defined_bytes", full.total_defined_bytes());
-  r.set("build_us", build_us);
-  r.set("diff_us", diff_us);
-  r.set("compile_us", compile_us);
+  r.set("build_us", summarize(build_s).median);
+  r.set("diff_us", summarize(diff_s).median);
+  r.set("compile_us", summarize(compile_s).median);
+  r.set("build_first_us", build_s.front());
+  r.set("diff_first_us", diff_s.front());
+  r.set("compile_first_us", compile_s.front());
+  r.set("graph_repeats", o.graph_repeats);
   r.set("op_histogram", op_histogram_str(op_histogram(g)));
 
   // First (cold) execution of the unified program.
@@ -376,9 +417,10 @@ void run_config(const TaskParams& p, const Options& o, CsvTable& csv, const std:
   TorchResult ref = torch_reference(p, inputs);
 
   std::vector<Row> rows;
+  if (o.torch_first) rows.push_back(run_torch(p, o, inputs));
   rows.push_back(run_dag(p, o, true, inputs, ref));
   if (!o.skip_nohc) rows.push_back(run_dag(p, o, false, inputs, ref));
-  rows.push_back(run_torch(p, o, inputs));
+  if (!o.torch_first) rows.push_back(run_torch(p, o, inputs));
   if (!o.skip_tree) rows.push_back(run_tree(p, o));
   for (auto& r : rows) {
     r.set("suite", suite);
@@ -478,6 +520,7 @@ std::vector<std::pair<std::string, TaskParams>> configs_for(const std::string& s
       add("scaling", p);
     }
   }
+  if (suite == "custom") return out;  // filled by main() from the overrides
   if (suite == "quick") {
     TaskParams c = make("chain", dt);
     c.n = 1024;
@@ -506,7 +549,10 @@ void usage() {
   std::printf(
       "usage: sad_bench [--suite all|quick|chain|sharing|diamond|nn|mlp|scaling] [--csv path]\n"
       "                 [--threads N] [--repeats N] [--warmup N] [--tree-cap N] [--seed N]\n"
-      "                 [--dtype f32|f64] [--skip-tree] [--skip-nohc]\n");
+      "                 [--graph-repeats N] [--dtype f32|f64] [--skip-tree] [--skip-nohc]\n"
+      "                 [--torch-first] [--malloc-stable]\n"
+      "       single configuration: --task chain|sharing|diamond|nn|mlp [--n N] [--depth N]\n"
+      "                 [--width N] [--sharing N] [--batch N] [--in N] [--hidden N] [--out N]\n");
 }
 
 }  // namespace
@@ -530,6 +576,18 @@ int main(int argc, char** argv) {
     else if (a == "--tree-cap") o.tree_cap = std::stoull(next());
     else if (a == "--seed") o.seed = std::stoull(next());
     else if (a == "--dtype") o.dtype = next();
+    else if (a == "--graph-repeats") o.graph_repeats = std::stoi(next());
+    else if (a == "--torch-first") o.torch_first = true;
+    else if (a == "--malloc-stable") o.malloc_stable = true;
+    else if (a == "--task") o.task = next();
+    else if (a == "--n") o.n = std::stoll(next());
+    else if (a == "--depth") o.depth = std::stoi(next());
+    else if (a == "--width") o.width = std::stoi(next());
+    else if (a == "--sharing") o.sharing = std::stoi(next());
+    else if (a == "--batch") o.batch = std::stoll(next());
+    else if (a == "--in") o.in = std::stoll(next());
+    else if (a == "--hidden") o.hidden = std::stoll(next());
+    else if (a == "--out") o.out = std::stoll(next());
     else if (a == "--skip-tree") o.skip_tree = true;
     else if (a == "--skip-nohc") o.skip_nohc = true;
     else if (a == "--verbose") o.verbose = true;
@@ -539,6 +597,13 @@ int main(int argc, char** argv) {
     }
   }
   const DType dt = o.dtype == "f64" ? DType::Float64 : DType::Float32;
+  if (o.malloc_stable) {
+    // Keep freed memory inside the process so that neither backend pays
+    // mmap/munmap and page-fault costs that depend on run order.
+    mallopt(M_MMAP_THRESHOLD, 1 << 30);
+    mallopt(M_TRIM_THRESHOLD, -1);
+    mallopt(M_TOP_PAD, 64 << 20);
+  }
   at::set_num_threads(o.threads);
   at::set_num_interop_threads(1);
   torch::manual_seed(o.seed);
@@ -560,7 +625,20 @@ int main(int argc, char** argv) {
   }
 
   CsvTable csv;
-  for (const auto& [suite, p] : configs_for(o.suite, dt)) run_config(p, o, csv, suite);
+  auto configs = configs_for(o.task.empty() ? o.suite : "custom", dt);
+  if (!o.task.empty()) {
+    TaskParams p = make(o.task, dt);
+    if (o.n >= 0) p.n = o.n;
+    if (o.depth >= 0) p.depth = o.depth;
+    if (o.width >= 0) p.width = o.width;
+    if (o.sharing >= 0) p.sharing = o.sharing;
+    if (o.batch >= 0) p.batch = o.batch;
+    if (o.in >= 0) p.in = o.in;
+    if (o.hidden >= 0) p.hidden = o.hidden;
+    if (o.out >= 0) p.out = o.out;
+    configs.emplace_back("custom", p);
+  }
+  for (const auto& [suite, p] : configs) run_config(p, o, csv, suite);
   if (csv.size() == 0) {
     usage();
     return 2;

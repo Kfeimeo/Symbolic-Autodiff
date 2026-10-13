@@ -52,9 +52,26 @@ cmake --build build -j$(nproc)
 
 ```
 sad_bench [--suite all|quick|chain|sharing|diamond|nn|mlp|scaling] [--csv path]
-          [--threads N] [--repeats N] [--warmup N] [--tree-cap N] [--seed N]
-          [--dtype f32|f64] [--skip-tree] [--skip-nohc]
+          [--threads N] [--repeats N] [--warmup N] [--graph-repeats N] [--tree-cap N]
+          [--seed N] [--dtype f32|f64] [--skip-tree] [--skip-nohc]
+          [--torch-first] [--malloc-stable]
+sad_bench --task chain|sharing|diamond|nn|mlp [--n N] [--depth N] [--width N] [--sharing N]
+          [--batch N] [--in N] [--hidden N] [--out N] ...      # one configuration
 ```
+
+`--malloc-stable` (used by `run_benchmarks.sh`) raises glibc's mmap and trim
+thresholds so freed tensor memory stays in the process. Without it, the
+backend that runs first at a large working set pays mmap/munmap and
+first-touch page-fault costs that the second one does not (see `REPORT.md`,
+appendix). `--torch-first` swaps the run order to expose such effects.
+
+Every configuration reports, per backend: forward/backward node counts,
+graph build / symbolic differentiation / SLP compilation time (cold and
+median over `--graph-repeats` fresh graphs), first execution, steady-state
+forward, backward and end-to-end time (median / P90 / min / mean over
+`--repeats` runs after `--warmup`), ATen operator invocations, peak logical
+live tensor bytes, peak malloc delta, and the gradient error against
+Autograd.
 
 ## Design summary
 
