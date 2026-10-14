@@ -29,9 +29,14 @@ class OpProfileScope {
   uint64_t base_ = 0;
 };
 
-// Current glibc malloc in-use bytes (arena + mmap chunks).
+// Allocator in-use bytes: glibc arena + mmap chunks on Linux, process private
+// bytes on Windows, 0 where unsupported (see malloc_accounting_supported()).
 uint64_t malloc_in_use_bytes();
-// Peak resident set size of the process in bytes.
+bool malloc_accounting_supported();
+// Peak resident set size (working set) of the process in bytes.
 uint64_t peak_rss_bytes();
+// Raises the allocator's mmap/trim thresholds (glibc only). Returns false
+// when the platform has no equivalent tuning.
+bool make_malloc_stable();
 
 }  // namespace sad

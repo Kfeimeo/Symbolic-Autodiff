@@ -2,8 +2,6 @@
 // LibTorch eager Autograd on identical, parametrised tasks.
 #include <torch/torch.h>
 
-#include <malloc.h>
-
 #include <cstdio>
 #include <cstring>
 #include <iostream>
@@ -597,12 +595,12 @@ int main(int argc, char** argv) {
     }
   }
   const DType dt = o.dtype == "f64" ? DType::Float64 : DType::Float32;
-  if (o.malloc_stable) {
-    // Keep freed memory inside the process so that neither backend pays
-    // mmap/munmap and page-fault costs that depend on run order.
-    mallopt(M_MMAP_THRESHOLD, 1 << 30);
-    mallopt(M_TRIM_THRESHOLD, -1);
-    mallopt(M_TOP_PAD, 64 << 20);
+  if (o.malloc_stable && !make_malloc_stable()) {
+    std::printf("note: --malloc-stable has no effect on this platform's allocator\n");
+    o.malloc_stable = false;
+  }
+  if (!malloc_accounting_supported()) {
+    std::printf("note: allocator memory accounting is not supported on this platform (reported as 0)\n");
   }
   at::set_num_threads(o.threads);
   at::set_num_interop_threads(1);

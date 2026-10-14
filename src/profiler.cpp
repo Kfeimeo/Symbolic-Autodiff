@@ -1,10 +1,21 @@
 #include "sad/profiler.hpp"
 
 #include <ATen/record_function.h>
-#include <malloc.h>
-#include <sys/resource.h>
 
 #include <atomic>
+
+#if defined(_WIN32)
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <psapi.h>
+#pragma comment(lib, "psapi.lib")
+#elif defined(__GLIBC__)
+#include <malloc.h>
+#include <sys/resource.h>
+#else
+#include <sys/resource.h>
+#endif
 
 namespace sad {
 
@@ -31,15 +42,63 @@ void on_end(const at::RecordFunction&, at::ObserverContext*) {
 }
 }  // namespace
 
+// Allocator in-use bytes. glibc: arena + mmap'd chunks (mallinfo2). Windows:
+// private committed bytes of the process (PROCESS_MEMORY_COUNTERS_EX). Other
+// platforms: 0 (unsupported, reported as such).
 uint64_t malloc_in_use_bytes() {
+#if defined(_WIN32)
+  PROCESS_MEMORY_COUNTERS_EX pmc{};
+  pmc.cb = sizeof(pmc);
+  if (GetProcessMemoryInfo(GetCurrentProcess(), reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&pmc), sizeof(pmc))) {
+    return static_cast<uint64_t>(pmc.PrivateUsage);
+  }
+  return 0;
+#elif defined(__GLIBC__)
   const struct mallinfo2 mi = mallinfo2();
   return static_cast<uint64_t>(mi.uordblks) + static_cast<uint64_t>(mi.hblkhd);
+#else
+  return 0;
+#endif
+}
+
+bool malloc_accounting_supported() {
+#if defined(_WIN32) || defined(__GLIBC__)
+  return true;
+#else
+  return false;
+#endif
 }
 
 uint64_t peak_rss_bytes() {
+#if defined(_WIN32)
+  PROCESS_MEMORY_COUNTERS pmc{};
+  pmc.cb = sizeof(pmc);
+  if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
+    return static_cast<uint64_t>(pmc.PeakWorkingSetSize);
+  }
+  return 0;
+#else
   struct rusage ru{};
   getrusage(RUSAGE_SELF, &ru);
-  return static_cast<uint64_t>(ru.ru_maxrss) * 1024;
+#if defined(__APPLE__)
+  return static_cast<uint64_t>(ru.ru_maxrss);  // bytes on macOS
+#else
+  return static_cast<uint64_t>(ru.ru_maxrss) * 1024;  // KiB on Linux
+#endif
+#endif
+}
+
+bool make_malloc_stable() {
+#if defined(__GLIBC__)
+  // Keep freed memory inside the process so that neither backend pays
+  // mmap/munmap and page-fault costs that depend on run order.
+  mallopt(M_MMAP_THRESHOLD, 1 << 30);
+  mallopt(M_TRIM_THRESHOLD, -1);
+  mallopt(M_TOP_PAD, 64 << 20);
+  return true;
+#else
+  return false;  // no equivalent tuning on this allocator
+#endif
 }
 
 OpProfileScope::OpProfileScope(bool sample_memory) {

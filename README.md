@@ -49,6 +49,25 @@ cmake --build build -j$(nproc)
 ./build/sad_bench --suite quick      # a fast sanity benchmark
 ```
 
+### Windows (MSVC)
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\setup_libtorch.ps1   # LibTorch CPU, Release
+cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+cmake --build build --config Release
+build\Release\sad_tests.exe
+build\Release\sad_bench.exe --suite quick --csv results\quick.csv
+python scripts\plot_results.py results\quick.csv results
+```
+
+The LibTorch DLLs are copied next to the executables after each build. The
+Windows build uses the same sources; platform differences are confined to
+`src/profiler.cpp` (process private bytes and peak working set via
+`GetProcessMemoryInfo` instead of glibc `mallinfo2` / `getrusage`) and to
+`--malloc-stable`, which is a glibc tuning and is reported as inactive on
+other allocators. The Windows build has not been exercised in CI yet; the
+Linux build and tests are unaffected by the platform guards.
+
 `scripts/run_benchmarks.sh [suite]` builds, tests, runs the suite, writes
 `results/<suite>.csv` + `results/<suite>.log` and renders figures.
 `scripts/make_tables.py results/results.csv` prints the Markdown tables used

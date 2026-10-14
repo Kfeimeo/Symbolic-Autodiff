@@ -16,7 +16,12 @@ endif()
 find_package(Torch REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
-add_compile_options(-Wall -Wextra -Wno-unused-parameter)
+if(MSVC)
+  add_compile_options(/W4 /wd4100 /wd4244 /wd4267 /wd4251 /wd4275 /bigobj /EHsc)
+  add_compile_definitions(NOMINMAX _CRT_SECURE_NO_WARNINGS)
+else()
+  add_compile_options(-Wall -Wextra -Wno-unused-parameter)
+endif()
 
 # Torch-free core: IR, hash-consing, type inference, builder, analysis,
 # autodiff, SLP/liveness, tree baseline, benchmark utilities.
@@ -46,6 +51,16 @@ target_link_libraries(sad_tests PRIVATE sad_exec)
 
 add_executable(sad_bench benchmarks/bench_main.cpp)
 target_link_libraries(sad_bench PRIVATE sad_exec)
+
+# On Windows the LibTorch DLLs must sit next to the executables.
+if(MSVC)
+  file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
+  foreach(tgt sad_tests sad_bench)
+    add_custom_command(TARGET ${tgt} POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different ${TORCH_DLLS} $<TARGET_FILE_DIR:${tgt}>
+      COMMAND_EXPAND_LISTS)
+  endforeach()
+endif()
 
 enable_testing()
 add_test(NAME sad_tests COMMAND sad_tests)

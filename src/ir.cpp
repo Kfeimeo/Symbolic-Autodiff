@@ -1,5 +1,6 @@
 #include "sad/ir.hpp"
 
+#include <cstring>
 #include <sstream>
 
 namespace sad {
@@ -63,8 +64,8 @@ bool Attrs::operator==(const Attrs& o) const {
   // and NaN compares consistently.
   uint64_t a, b;
   static_assert(sizeof(a) == sizeof(value));
-  __builtin_memcpy(&a, &value, sizeof(a));
-  __builtin_memcpy(&b, &o.value, sizeof(b));
+  std::memcpy(&a, &value, sizeof(a));
+  std::memcpy(&b, &o.value, sizeof(b));
   return dims == o.dims && keepdim == o.keepdim && a == b &&
          input_index == o.input_index;
 }
