@@ -1,0 +1,262 @@
+libtorch 2.14.1, threads=4, repeats=20, warmup=3, dtype=f32, tree_cap=2000000
+chain(n=64,depth=4)
+  dag       nodes=22+20 build=6.6us diff=9.6us compile=4.7us fwd=11.5us bwd=22.6us total=34.1us (p90 43.6us) ops=62 live=2.3KiB malloc=2.9KiB grad_ok=1 err=0
+  dag_nohc  nodes=22+23 build=2.6us diff=4.6us compile=4.2us fwd=11.5us bwd=25.2us total=36.6us (p90 89.9us) ops=71 live=2.3KiB malloc=2.5KiB grad_ok=1 err=0
+  torch     fwd=24.2us bwd=93.5us total=118.6us (p90 162.2us) fwd_nograd=10.6us ops=61 peak_malloc=8.1KiB
+  tree      fwd_nodes=22 grad_nodes=717 created=739 build=7.3us diff=144.2us bytes=97.7KiB
+chain(n=64,depth=16)
+  dag       nodes=82+68 build=20.6us diff=24.4us compile=10.4us fwd=40.6us bwd=76.7us total=117.3us (p90 153.5us) ops=206 live=8.3KiB malloc=18.2KiB grad_ok=1 err=0
+  dag_nohc  nodes=82+83 build=8.5us diff=15.8us compile=12.4us fwd=41.5us bwd=90.1us total=131.5us (p90 168.0us) ops=251 live=8.3KiB malloc=18.0KiB grad_ok=1 err=0
+  torch     fwd=92.4us bwd=386.8us total=475.5us (p90 584.0us) fwd_nograd=36.8us ops=205 peak_malloc=47.7KiB
+  tree      fwd_nodes=82 grad_nodes=20453 created=20535 build=16.3us diff=4.26ms bytes=2.7MiB
+chain(n=64,depth=64)
+  dag       nodes=322+260 build=79.8us diff=92.9us compile=36.0us fwd=172.7us bwd=302.4us total=485.7us (p90 551.3us) ops=782 live=32.3KiB malloc=81.9KiB grad_ok=1 err=0
+  dag_nohc  nodes=322+323 build=33.7us diff=56.7us compile=38.9us fwd=165.2us bwd=390.4us total=555.9us (p90 612.7us) ops=971 live=32.3KiB malloc=81.7KiB grad_ok=1 err=0
+  torch     fwd=368.5us bwd=1.40ms total=1.79ms (p90 1.84ms) fwd_nograd=142.0us ops=781 peak_malloc=235.9KiB
+  tree      fwd_nodes=322 grad_nodes=977797 created=978119 build=47.4us diff=339.61ms bytes=126.8MiB
+chain(n=64,depth=256)
+  dag       nodes=1282+1028 build=436.2us diff=440.6us compile=185.3us fwd=982.5us bwd=1.49ms total=2.43ms (p90 3.53ms) ops=3086 live=128.3KiB malloc=330.3KiB grad_ok=1 err=0
+  dag_nohc  nodes=1282+1283 build=194.1us diff=263.0us compile=152.6us fwd=883.6us bwd=1.67ms total=2.60ms (p90 2.80ms) ops=3851 live=128.3KiB malloc=329.7KiB grad_ok=1 err=0
+  torch     fwd=2.24ms bwd=7.91ms total=10.38ms (p90 12.08ms) fwd_nograd=656.7us ops=3085 peak_malloc=981.0KiB
+  tree      fwd_nodes=1282 grad_nodes=0 created=2000001 build=174.9us diff=737.81ms bytes=170.2KiB CAPPED
+chain(n=1024,depth=4)
+  dag       nodes=22+20 build=6.3us diff=8.9us compile=4.9us fwd=17.0us bwd=38.2us total=55.1us (p90 64.8us) ops=62 live=36.0KiB malloc=38.5KiB grad_ok=1 err=0
+  dag_nohc  nodes=22+23 build=2.8us diff=5.7us compile=5.2us fwd=16.6us bwd=42.2us total=58.8us (p90 65.7us) ops=71 live=36.0KiB malloc=38.2KiB grad_ok=1 err=0
+  torch     fwd=34.8us bwd=114.5us total=149.8us (p90 182.7us) fwd_nograd=16.2us ops=61 peak_malloc=44.2KiB
+  tree      fwd_nodes=22 grad_nodes=717 created=739 build=8.3us diff=186.7us bytes=97.7KiB
+chain(n=1024,depth=16)
+  dag       nodes=82+68 build=24.2us diff=29.8us compile=12.1us fwd=70.1us bwd=156.9us total=234.9us (p90 327.6us) ops=206 live=132.0KiB malloc=143.7KiB grad_ok=1 err=0
+  dag_nohc  nodes=82+83 build=10.7us diff=18.7us compile=13.5us fwd=71.4us bwd=167.6us total=250.7us (p90 329.4us) ops=251 live=132.0KiB malloc=143.3KiB grad_ok=1 err=0
+  torch     fwd=162.7us bwd=521.7us total=724.4us (p90 1.15ms) fwd_nograd=56.8us ops=205 peak_malloc=173.3KiB
+  tree      fwd_nodes=82 grad_nodes=20453 created=20535 build=20.3us diff=3.46ms bytes=2.7MiB
+chain(n=1024,depth=64)
+  dag       nodes=322+260 build=86.7us diff=101.0us compile=37.3us fwd=305.1us bwd=667.0us total=977.9us (p90 1.09ms) ops=782 live=516.0KiB malloc=567.5KiB grad_ok=1 err=0
+  dag_nohc  nodes=322+323 build=58.4us diff=104.6us compile=86.9us fwd=331.9us bwd=751.8us total=1.09ms (p90 1.82ms) ops=971 live=516.0KiB malloc=567.0KiB grad_ok=1 err=0
+  torch     fwd=606.3us bwd=1.94ms total=2.54ms (p90 3.00ms) fwd_nograd=240.1us ops=781 peak_malloc=720.8KiB
+  tree      fwd_nodes=322 grad_nodes=977797 created=978119 build=82.3us diff=168.13ms bytes=126.8MiB
+chain(n=1024,depth=256)
+  dag       nodes=1282+1028 build=791.4us diff=1.05ms compile=423.9us fwd=1.93ms bwd=3.17ms total=5.13ms (p90 5.51ms) ops=3086 live=2.0MiB malloc=2.2MiB grad_ok=1 err=0
+  dag_nohc  nodes=1282+1283 build=155.5us diff=262.4us compile=165.7us fwd=1.93ms bwd=3.48ms total=5.67ms (p90 7.91ms) ops=3851 live=2.0MiB malloc=2.2MiB grad_ok=1 err=0
+  torch     fwd=3.70ms bwd=11.56ms total=15.90ms (p90 17.76ms) fwd_nograd=1.07ms ops=3085 peak_malloc=2.8MiB
+  tree      fwd_nodes=1282 grad_nodes=0 created=2000001 build=190.8us diff=410.16ms bytes=170.2KiB CAPPED
+chain(n=65536,depth=4)
+  dag       nodes=22+20 build=6.7us diff=9.5us compile=5.8us fwd=243.4us bwd=666.4us total=948.4us (p90 1.07ms) ops=68 live=2.3MiB malloc=2.3MiB grad_ok=1 err=0
+  dag_nohc  nodes=22+23 build=2.9us diff=5.5us compile=5.1us fwd=219.8us bwd=576.4us total=806.0us (p90 882.5us) ops=77 live=2.3MiB malloc=2.3MiB grad_ok=1 err=0
+  torch     fwd=316.4us bwd=473.4us total=808.7us (p90 1.01ms) fwd_nograd=227.6us ops=67 peak_malloc=2.3MiB
+  tree      fwd_nodes=22 grad_nodes=717 created=739 build=16.3us diff=557.3us bytes=97.7KiB
+chain(n=65536,depth=16)
+  dag       nodes=82+68 build=30.6us diff=32.1us compile=17.3us fwd=2.07ms bwd=4.01ms total=6.37ms (p90 8.41ms) ops=212 live=8.3MiB malloc=8.3MiB grad_ok=1 err=0
+  dag_nohc  nodes=82+83 build=18.8us diff=34.7us compile=23.4us fwd=1.82ms bwd=3.41ms total=5.36ms (p90 8.21ms) ops=257 live=8.3MiB malloc=8.3MiB grad_ok=1 err=0
+  torch     fwd=1.41ms bwd=2.02ms total=3.42ms (p90 4.11ms) fwd_nograd=707.5us ops=211 peak_malloc=8.3MiB
+  tree      fwd_nodes=82 grad_nodes=20453 created=20535 build=21.9us diff=3.31ms bytes=2.7MiB
+chain(n=65536,depth=64)
+  dag       nodes=322+260 build=81.9us diff=104.8us compile=37.5us fwd=8.55ms bwd=15.44ms total=24.48ms (p90 28.97ms) ops=788 live=32.3MiB malloc=32.3MiB grad_ok=1 err=0
+  dag_nohc  nodes=322+323 build=38.7us diff=58.4us compile=40.0us fwd=7.87ms bwd=13.22ms total=21.36ms (p90 27.25ms) ops=977 live=32.3MiB malloc=32.3MiB grad_ok=1 err=0
+  torch     fwd=7.66ms bwd=10.80ms total=18.53ms (p90 25.20ms) fwd_nograd=5.36ms ops=787 peak_malloc=32.4MiB
+  tree      fwd_nodes=322 grad_nodes=977797 created=978119 build=66.2us diff=172.20ms bytes=126.8MiB
+chain(n=65536,depth=256)
+  dag       nodes=1282+1028 build=396.1us diff=444.3us compile=153.0us fwd=34.40ms bwd=60.45ms total=98.92ms (p90 148.54ms) ops=3092 live=128.3MiB malloc=128.4MiB grad_ok=1 err=0
+  dag_nohc  nodes=1282+1283 build=253.0us diff=537.8us compile=279.2us fwd=31.06ms bwd=53.92ms total=87.61ms (p90 112.06ms) ops=3857 live=128.3MiB malloc=128.4MiB grad_ok=1 err=0
+  torch     fwd=26.54ms bwd=43.78ms total=72.93ms (p90 79.65ms) fwd_nograd=21.20ms ops=3091 peak_malloc=129.1MiB
+  tree      fwd_nodes=1282 grad_nodes=0 created=2000001 build=212.6us diff=572.69ms bytes=170.2KiB CAPPED
+sharing(n=1024,depth=8,k=1)
+  dag       nodes=42+36 build=17.8us diff=22.8us compile=13.2us fwd=32.9us bwd=72.6us total=105.1us (p90 117.9us) ops=110 live=68.0KiB malloc=73.7KiB grad_ok=1 err=0
+  dag_nohc  nodes=42+43 build=6.1us diff=9.7us compile=9.7us fwd=32.0us bwd=82.3us total=115.9us (p90 174.1us) ops=131 live=68.0KiB malloc=73.2KiB grad_ok=1 err=0
+  torch     fwd=84.5us bwd=273.8us total=358.8us (p90 520.3us) fwd_nograd=30.4us ops=109 peak_malloc=85.1KiB
+  tree      fwd_nodes=42 grad_nodes=3509 created=3551 build=11.7us diff=566.4us bytes=470.6KiB
+sharing(n=1024,depth=8,k=2)
+  dag       nodes=50+44 build=18.1us diff=19.6us compile=10.2us fwd=43.2us bwd=87.6us total=131.4us (p90 154.7us) ops=126 live=68.0KiB malloc=73.5KiB grad_ok=1 err=0
+  dag_nohc  nodes=66+83 build=10.9us diff=20.1us compile=16.1us fwd=65.0us bwd=150.0us total=235.5us (p90 321.8us) ops=195 live=80.0KiB malloc=85.7KiB grad_ok=1 err=0
+  torch     fwd=129.0us bwd=453.4us total=591.3us (p90 722.8us) fwd_nograd=56.8us ops=197 peak_malloc=113.6KiB
+  tree      fwd_nodes=2807 grad_nodes=0 created=2000001 build=463.7us diff=382.78ms bytes=372.8KiB CAPPED
+sharing(n=1024,depth=8,k=4)
+  dag       nodes=66+60 build=29.0us diff=26.1us compile=13.1us fwd=63.8us bwd=108.9us total=174.7us (p90 222.2us) ops=158 live=68.0KiB malloc=73.5KiB grad_ok=1 err=0
+  dag_nohc  nodes=114+163 build=17.6us diff=37.8us compile=26.8us fwd=127.5us bwd=241.0us total=377.4us (p90 410.8us) ops=323 live=84.0KiB malloc=90.2KiB grad_ok=1 err=0
+  torch     fwd=240.1us bwd=804.6us total=1.04ms (p90 1.39ms) fwd_nograd=114.8us ops=373 peak_malloc=146.8KiB
+  tree      fwd_nodes=502437 grad_nodes=0 created=2000001 build=63.07ms diff=368.49ms bytes=65.2MiB CAPPED
+sharing(n=1024,depth=8,k=8)
+  dag       nodes=98+92 build=52.2us diff=40.0us compile=20.2us fwd=102.3us bwd=145.7us total=251.5us (p90 281.8us) ops=222 live=68.0KiB malloc=73.5KiB grad_ok=1 err=1.23007e-07
+  dag_nohc  nodes=210+323 build=30.7us diff=78.6us compile=50.2us fwd=258.8us bwd=468.8us total=747.6us (p90 790.0us) ops=579 live=84.0KiB malloc=90.1KiB grad_ok=1 err=0
+  torch     fwd=476.7us bwd=1.41ms total=1.90ms (p90 1.97ms) fwd_nograd=221.2us ops=725 peak_malloc=219.1KiB
+  tree      fwd_nodes=0 grad_nodes=0 created=2000001 build=364.33ms diff=0.0us bytes=0B CAPPED
+sharing(n=65536,depth=8,k=1)
+  dag       nodes=42+36 build=12.4us diff=16.4us compile=8.2us fwd=735.4us bwd=1.78ms total=2.58ms (p90 3.48ms) ops=116 live=4.3MiB malloc=4.3MiB grad_ok=1 err=0
+  dag_nohc  nodes=42+43 build=8.9us diff=13.5us compile=16.4us fwd=700.4us bwd=1.82ms total=2.56ms (p90 2.71ms) ops=137 live=4.3MiB malloc=4.3MiB grad_ok=1 err=0
+  torch     fwd=757.6us bwd=1.28ms total=2.06ms (p90 2.37ms) fwd_nograd=506.7us ops=115 peak_malloc=4.3MiB
+  tree      fwd_nodes=42 grad_nodes=3509 created=3551 build=24.2us diff=1.24ms bytes=470.6KiB
+sharing(n=65536,depth=8,k=2)
+  dag       nodes=50+44 build=32.2us diff=40.3us compile=20.1us fwd=670.0us bwd=1.40ms total=2.13ms (p90 2.33ms) ops=132 live=4.3MiB malloc=4.3MiB grad_ok=1 err=0
+  dag_nohc  nodes=66+83 build=10.2us diff=26.3us compile=16.0us fwd=1.00ms bwd=1.98ms total=3.13ms (p90 4.73ms) ops=201 live=5.0MiB malloc=5.0MiB grad_ok=1 err=0
+  torch     fwd=1.16ms bwd=2.03ms total=3.23ms (p90 8.03ms) fwd_nograd=768.8us ops=203 peak_malloc=5.0MiB
+  tree      fwd_nodes=2807 grad_nodes=0 created=2000001 build=478.4us diff=418.33ms bytes=372.8KiB CAPPED
+sharing(n=65536,depth=8,k=4)
+  dag       nodes=66+60 build=40.5us diff=33.7us compile=18.9us fwd=908.8us bwd=1.53ms total=2.53ms (p90 2.92ms) ops=164 live=4.3MiB malloc=4.3MiB grad_ok=1 err=0
+  dag_nohc  nodes=114+163 build=17.9us diff=38.3us compile=27.4us fwd=1.86ms bwd=3.68ms total=5.59ms (p90 6.32ms) ops=329 live=5.3MiB malloc=5.3MiB grad_ok=1 err=0
+  torch     fwd=1.69ms bwd=2.83ms total=4.57ms (p90 5.40ms) fwd_nograd=1.28ms ops=379 peak_malloc=5.1MiB
+  tree      fwd_nodes=502437 grad_nodes=0 created=2000001 build=54.38ms diff=342.72ms bytes=65.2MiB CAPPED
+sharing(n=65536,depth=8,k=8)
+  dag       nodes=98+92 build=47.9us diff=39.7us compile=19.0us fwd=1.12ms bwd=1.63ms total=2.74ms (p90 2.97ms) ops=228 live=4.3MiB malloc=4.3MiB grad_ok=1 err=1.16858e-07
+  dag_nohc  nodes=210+323 build=31.0us diff=72.9us compile=44.1us fwd=4.61ms bwd=8.16ms total=13.42ms (p90 29.46ms) ops=585 live=5.3MiB malloc=5.3MiB grad_ok=1 err=0
+  torch     fwd=4.07ms bwd=6.47ms total=10.62ms (p90 11.81ms) fwd_nograd=4.72ms ops=731 peak_malloc=5.1MiB
+  tree      fwd_nodes=0 grad_nodes=0 created=2000001 build=431.83ms diff=0.0us bytes=0B CAPPED
+diamond(n=4096,depth=4,width=2)
+  dag       nodes=30+40 build=9.6us diff=15.9us compile=7.4us fwd=39.2us bwd=152.5us total=200.3us (p90 276.4us) ops=110 live=224.0KiB malloc=228.6KiB grad_ok=1 err=0
+  dag_nohc  nodes=30+47 build=4.6us diff=9.4us compile=8.2us fwd=38.0us bwd=153.7us total=196.7us (p90 242.0us) ops=131 live=224.0KiB malloc=228.4KiB grad_ok=1 err=0
+  torch     fwd=75.8us bwd=260.7us total=336.5us (p90 480.9us) fwd_nograd=51.0us ops=97 peak_malloc=240.8KiB
+  tree      fwd_nodes=122 grad_nodes=11307 created=11429 build=47.6us diff=2.70ms bytes=1.5MiB
+diamond(n=4096,depth=4,width=4)
+  dag       nodes=62+80 build=31.8us diff=49.2us compile=21.4us fwd=143.4us bwd=518.0us total=661.5us (p90 744.1us) ops=214 live=352.0KiB malloc=359.7KiB grad_ok=1 err=0
+  dag_nohc  nodes=62+95 build=13.9us diff=29.2us compile=22.9us fwd=144.5us bwd=536.5us total=698.9us (p90 782.7us) ops=259 live=352.0KiB malloc=359.2KiB grad_ok=1 err=0
+  torch     fwd=181.1us bwd=499.6us total=656.9us (p90 1.21ms) fwd_nograd=73.3us ops=193 peak_malloc=386.0KiB
+  tree      fwd_nodes=1532 grad_nodes=1226687 created=1228219 build=262.2us diff=199.24ms bytes=159.3MiB
+diamond(n=4096,depth=4,width=8)
+  dag       nodes=126+160 build=36.7us diff=66.0us compile=23.5us fwd=204.9us bwd=645.0us total=858.3us (p90 936.3us) ops=422 live=608.0KiB malloc=621.7KiB grad_ok=1 err=0
+  dag_nohc  nodes=126+191 build=18.1us diff=36.1us compile=25.8us fwd=255.4us bwd=1.00ms total=1.33ms (p90 1.94ms) ops=515 live=608.0KiB malloc=621.5KiB grad_ok=1 err=0
+  torch     fwd=352.4us bwd=1.00ms total=1.35ms (p90 1.90ms) fwd_nograd=153.7us ops=385 peak_malloc=685.8KiB
+  tree      fwd_nodes=22232 grad_nodes=0 created=2000001 build=2.58ms diff=384.29ms bytes=2.9MiB CAPPED
+diamond(n=4096,depth=16,width=2)
+  dag       nodes=114+148 build=35.2us diff=60.8us compile=21.4us fwd=201.1us bwd=656.6us total=883.7us (p90 1.22ms) ops=398 live=800.0KiB malloc=818.4KiB grad_ok=1 err=0
+  dag_nohc  nodes=114+179 build=16.4us diff=33.9us compile=25.4us fwd=216.2us bwd=776.2us total=1.06ms (p90 2.17ms) ops=491 live=800.0KiB malloc=818.2KiB grad_ok=1 err=0
+  torch     fwd=321.1us bwd=882.7us total=1.19ms (p90 1.43ms) fwd_nograd=131.4us ops=349 peak_malloc=876.3KiB
+  tree      fwd_nodes=524282 grad_nodes=0 created=2000001 build=58.38ms diff=342.51ms bytes=68.0MiB CAPPED
+diamond(n=4096,depth=16,width=4)
+  dag       nodes=242+308 build=95.8us diff=201.6us compile=68.3us fwd=515.5us bwd=1.35ms total=1.89ms (p90 3.18ms) ops=814 live=1.3MiB malloc=1.3MiB grad_ok=1 err=0
+  dag_nohc  nodes=242+371 build=33.4us diff=67.3us compile=41.9us fwd=494.1us bwd=1.44ms total=1.96ms (p90 2.03ms) ops=1003 live=1.3MiB malloc=1.3MiB grad_ok=1 err=0
+  torch     fwd=691.3us bwd=1.97ms total=2.67ms (p90 2.89ms) fwd_nograd=310.2us ops=733 peak_malloc=1.4MiB
+  tree      fwd_nodes=0 grad_nodes=0 created=2000001 build=485.50ms diff=0.0us bytes=0B CAPPED
+diamond(n=4096,depth=16,width=8)
+  dag       nodes=498+628 build=122.6us diff=224.5us compile=74.9us fwd=1.23ms bwd=3.03ms total=4.33ms (p90 4.58ms) ops=1646 live=2.3MiB malloc=2.3MiB grad_ok=1 err=0
+  dag_nohc  nodes=498+755 build=60.2us diff=140.5us compile=85.3us fwd=1.30ms bwd=3.29ms total=4.59ms (p90 5.04ms) ops=2027 live=2.3MiB malloc=2.3MiB grad_ok=1 err=0
+  torch     fwd=2.06ms bwd=4.82ms total=6.87ms (p90 7.33ms) fwd_nograd=724.4us ops=1501 peak_malloc=2.6MiB
+  tree      fwd_nodes=0 grad_nodes=0 created=2000001 build=405.90ms diff=0.0us bytes=0B CAPPED
+nn(batch=32,in=64,out=32)
+  dag       nodes=7+11 build=2.4us diff=4.8us compile=3.6us fwd=9.8us bwd=27.6us total=37.4us (p90 38.9us) ops=45 live=28.1KiB malloc=20.1KiB grad_ok=1 err=0
+  dag_nohc  nodes=7+11 build=1.6us diff=2.4us compile=3.1us fwd=10.0us bwd=27.6us total=37.6us (p90 64.7us) ops=45 live=28.1KiB malloc=20.1KiB grad_ok=1 err=0
+  torch     fwd=20.3us bwd=63.6us total=84.2us (p90 113.7us) fwd_nograd=9.1us ops=44 peak_malloc=24.2KiB
+  tree      fwd_nodes=7 grad_nodes=61 created=68 build=5.2us diff=15.3us bytes=9.3KiB
+nn(batch=256,in=512,out=256)
+  dag       nodes=7+11 build=2.3us diff=5.1us compile=3.1us fwd=363.8us bwd=754.0us total=1.12ms (p90 1.42ms) ops=51 live=1.8MiB malloc=1.3MiB grad_ok=1 err=0
+  dag_nohc  nodes=7+11 build=1.4us diff=2.7us compile=3.1us fwd=325.9us bwd=719.9us total=1.06ms (p90 1.41ms) ops=51 live=1.8MiB malloc=1.3MiB grad_ok=1 err=0
+  torch     fwd=405.9us bwd=727.7us total=1.13ms (p90 1.23ms) fwd_nograd=294.0us ops=50 peak_malloc=1.3MiB
+  tree      fwd_nodes=7 grad_nodes=61 created=68 build=7.2us diff=17.7us bytes=9.3KiB
+nn(batch=1024,in=1024,out=1024)
+  dag       nodes=7+11 build=2.4us diff=6.2us compile=4.8us fwd=6.90ms bwd=13.28ms total=20.35ms (p90 23.86ms) ops=51 live=16.0MiB malloc=12.0MiB grad_ok=1 err=0
+  dag_nohc  nodes=7+11 build=1.3us diff=2.4us compile=2.8us fwd=6.98ms bwd=14.08ms total=21.59ms (p90 27.62ms) ops=51 live=16.0MiB malloc=12.0MiB grad_ok=1 err=0
+  torch     fwd=8.84ms bwd=16.48ms total=25.29ms (p90 27.78ms) fwd_nograd=6.73ms ops=50 peak_malloc=12.0MiB
+  tree      fwd_nodes=7 grad_nodes=61 created=68 build=5.9us diff=19.9us bytes=9.3KiB
+mlp(batch=128,in=64,hidden=64,out=64,layers=2)
+  dag       nodes=18+27 build=6.6us diff=12.6us compile=6.5us fwd=94.1us bwd=232.4us total=338.2us (p90 411.8us) ops=110 live=224.0KiB malloc=226.1KiB grad_ok=1 err=0
+  dag_nohc  nodes=18+30 build=3.2us diff=7.4us compile=6.4us fwd=97.5us bwd=235.1us total=342.8us (p90 474.1us) ops=117 live=256.0KiB malloc=258.7KiB grad_ok=1 err=0
+  torch     fwd=118.7us bwd=315.6us total=449.3us (p90 548.9us) fwd_nograd=77.3us ops=107 peak_malloc=167.5KiB
+  tree      fwd_nodes=34 grad_nodes=1301 created=1335 build=12.9us diff=371.3us bytes=185.2KiB
+mlp(batch=128,in=64,hidden=64,out=64,layers=4)
+  dag       nodes=28+41 build=13.1us diff=25.4us compile=11.2us fwd=151.6us bwd=396.7us total=579.0us (p90 684.4us) ops=172 live=352.0KiB malloc=354.9KiB grad_ok=1 err=0
+  dag_nohc  nodes=28+46 build=4.7us diff=10.7us compile=8.4us fwd=153.1us bwd=386.9us total=579.6us (p90 645.6us) ops=185 live=384.0KiB malloc=387.2KiB grad_ok=1 err=0
+  torch     fwd=228.1us bwd=653.7us total=891.6us (p90 965.8us) fwd_nograd=125.0us ops=165 peak_malloc=237.4KiB
+  tree      fwd_nodes=54 grad_nodes=3609 created=3663 build=16.9us diff=887.9us bytes=508.6KiB
+mlp(batch=128,in=64,hidden=64,out=64,layers=8)
+  dag       nodes=48+69 build=20.6us diff=33.8us compile=12.0us fwd=329.6us bwd=828.3us total=1.17ms (p90 1.76ms) ops=296 live=608.0KiB malloc=614.0KiB grad_ok=1 err=0
+  dag_nohc  nodes=48+78 build=8.0us diff=17.4us compile=13.5us fwd=297.4us bwd=821.0us total=1.15ms (p90 1.51ms) ops=321 live=640.0KiB malloc=646.5KiB grad_ok=1 err=0
+  torch     fwd=357.1us bwd=983.1us total=1.33ms (p90 1.87ms) fwd_nograd=290.2us ops=281 peak_malloc=375.3KiB
+  tree      fwd_nodes=94 grad_nodes=13153 created=13247 build=26.6us diff=2.18ms bytes=1.8MiB
+mlp(batch=128,in=256,hidden=256,out=64,layers=2)
+  dag       nodes=18+27 build=6.1us diff=12.9us compile=6.8us fwd=437.8us bwd=866.0us total=1.47ms (p90 2.07ms) ops=110 live=962.3KiB malloc=834.2KiB grad_ok=1 err=0
+  dag_nohc  nodes=18+30 build=6.1us diff=13.3us compile=11.3us fwd=411.2us bwd=1.05ms total=1.46ms (p90 2.09ms) ops=117 live=962.3KiB malloc=834.4KiB grad_ok=1 err=0
+  torch     fwd=489.3us bwd=921.2us total=1.42ms (p90 1.74ms) fwd_nograd=404.2us ops=107 peak_malloc=839.5KiB
+  tree      fwd_nodes=34 grad_nodes=1301 created=1335 build=21.3us diff=515.0us bytes=185.2KiB
+mlp(batch=128,in=256,hidden=256,out=64,layers=4)
+  dag       nodes=28+41 build=15.9us diff=30.3us compile=14.9us fwd=888.8us bwd=2.02ms total=2.90ms (p90 3.45ms) ops=172 live=1.4MiB malloc=1.3MiB grad_ok=1 err=0
+  dag_nohc  nodes=28+46 build=4.9us diff=10.3us compile=8.0us fwd=794.3us bwd=1.61ms total=2.42ms (p90 2.61ms) ops=185 live=1.4MiB malloc=1.3MiB grad_ok=1 err=0
+  torch     fwd=797.4us bwd=1.43ms total=2.23ms (p90 2.95ms) fwd_nograd=651.9us ops=165 peak_malloc=1.3MiB
+  tree      fwd_nodes=54 grad_nodes=3609 created=3663 build=18.7us diff=693.7us bytes=508.6KiB
+mlp(batch=128,in=256,hidden=256,out=64,layers=8)
+  dag       nodes=48+69 build=17.0us diff=29.5us compile=12.6us fwd=1.32ms bwd=2.67ms total=3.99ms (p90 4.35ms) ops=296 live=2.4MiB malloc=2.3MiB grad_ok=1 err=0
+  dag_nohc  nodes=48+78 build=7.9us diff=17.1us compile=12.3us fwd=1.62ms bwd=3.14ms total=5.01ms (p90 5.90ms) ops=321 live=2.4MiB malloc=2.3MiB grad_ok=1 err=0
+  torch     fwd=1.93ms bwd=3.46ms total=5.42ms (p90 5.94ms) fwd_nograd=1.49ms ops=281 peak_malloc=2.3MiB
+  tree      fwd_nodes=94 grad_nodes=13153 created=13247 build=41.7us diff=2.88ms bytes=1.8MiB
+mlp(batch=128,in=1024,hidden=1024,out=64,layers=2)
+  dag       nodes=18+27 build=6.0us diff=12.0us compile=5.4us fwd=3.37ms bwd=6.07ms total=9.45ms (p90 17.01ms) ops=110 live=9.8MiB malloc=9.3MiB grad_ok=1 err=0
+  dag_nohc  nodes=18+30 build=4.9us diff=10.9us compile=9.4us fwd=3.39ms bwd=5.93ms total=9.16ms (p90 10.19ms) ops=117 live=9.8MiB malloc=9.3MiB grad_ok=1 err=0
+  torch     fwd=3.51ms bwd=5.96ms total=9.33ms (p90 9.95ms) fwd_nograd=3.29ms ops=107 peak_malloc=9.3MiB
+  tree      fwd_nodes=34 grad_nodes=1301 created=1335 build=16.7us diff=374.8us bytes=185.2KiB
+mlp(batch=128,in=1024,hidden=1024,out=64,layers=4)
+  dag       nodes=28+41 build=7.9us diff=14.2us compile=6.2us fwd=6.39ms bwd=11.48ms total=17.96ms (p90 20.63ms) ops=172 live=17.8MiB malloc=17.3MiB grad_ok=1 err=0
+  dag_nohc  nodes=28+46 build=4.8us diff=10.3us compile=8.3us fwd=5.99ms bwd=9.02ms total=15.24ms (p90 18.98ms) ops=185 live=17.8MiB malloc=17.3MiB grad_ok=1 err=0
+  torch     fwd=6.57ms bwd=11.00ms total=18.06ms (p90 21.32ms) fwd_nograd=5.27ms ops=165 peak_malloc=17.3MiB
+  tree      fwd_nodes=54 grad_nodes=3609 created=3663 build=18.9us diff=743.1us bytes=508.6KiB
+mlp(batch=128,in=1024,hidden=1024,out=64,layers=8)
+  dag       nodes=48+69 build=21.2us diff=36.3us compile=16.1us fwd=11.46ms bwd=20.75ms total=31.73ms (p90 42.94ms) ops=296 live=33.8MiB malloc=33.3MiB grad_ok=1 err=0
+  dag_nohc  nodes=48+78 build=8.4us diff=18.0us compile=14.0us fwd=14.19ms bwd=24.42ms total=38.60ms (p90 45.59ms) ops=321 live=33.8MiB malloc=33.3MiB grad_ok=1 err=0
+  torch     fwd=10.80ms bwd=17.35ms total=28.10ms (p90 38.23ms) fwd_nograd=9.83ms ops=281 peak_malloc=33.3MiB
+  tree      fwd_nodes=94 grad_nodes=13153 created=13247 build=28.9us diff=2.30ms bytes=1.8MiB
+chain(n=8,depth=64)
+  dag       nodes=322+260 build=79.3us diff=99.0us compile=36.6us fwd=192.3us bwd=346.0us total=542.8us (p90 621.2us) ops=782 live=4.0KiB malloc=57.1KiB grad_ok=1 err=0
+  dag_nohc  nodes=322+323 build=33.5us diff=58.1us compile=43.9us fwd=189.5us bwd=437.3us total=635.0us (p90 664.0us) ops=971 live=4.0KiB malloc=56.7KiB grad_ok=1 err=0
+  torch     fwd=384.4us bwd=1.42ms total=1.80ms (p90 1.89ms) fwd_nograd=162.9us ops=781 peak_malloc=219.6KiB
+  tree      fwd_nodes=322 grad_nodes=977797 created=978119 build=47.0us diff=154.21ms bytes=126.8MiB
+chain(n=8,depth=128)
+  dag       nodes=642+516 build=159.2us diff=207.0us compile=73.9us fwd=367.6us bwd=679.3us total=1.05ms (p90 1.13ms) ops=1550 live=8.0KiB malloc=112.5KiB grad_ok=1 err=0
+  dag_nohc  nodes=642+643 build=68.1us diff=132.0us compile=83.6us fwd=404.5us bwd=860.6us total=1.27ms (p90 1.34ms) ops=1931 live=8.0KiB malloc=114.4KiB grad_ok=1 err=0
+  torch     fwd=747.7us bwd=2.91ms total=3.65ms (p90 3.75ms) fwd_nograd=335.8us ops=1549 peak_malloc=451.0KiB
+  tree      fwd_nodes=642 grad_nodes=0 created=2000001 build=143.4us diff=407.80ms bytes=85.2KiB CAPPED
+chain(n=8,depth=256)
+  dag       nodes=1282+1028 build=597.0us diff=854.4us compile=336.2us fwd=1.98ms bwd=3.18ms total=5.23ms (p90 5.57ms) ops=3086 live=16.0KiB malloc=222.9KiB grad_ok=1 err=0
+  dag_nohc  nodes=1282+1283 build=235.4us diff=533.8us compile=290.3us fwd=1.87ms bwd=3.31ms total=5.22ms (p90 5.77ms) ops=3851 live=16.0KiB malloc=223.7KiB grad_ok=1 err=0
+  torch     fwd=1.73ms bwd=6.22ms total=7.94ms (p90 8.22ms) fwd_nograd=702.3us ops=3085 peak_malloc=916.9KiB
+  tree      fwd_nodes=1282 grad_nodes=0 created=2000001 build=173.6us diff=399.79ms bytes=170.2KiB CAPPED
+chain(n=8,depth=512)
+  dag       nodes=2562+2052 build=779.2us diff=883.6us compile=304.0us fwd=2.07ms bwd=3.26ms total=5.32ms (p90 5.71ms) ops=6158 live=32.0KiB malloc=443.4KiB grad_ok=1 err=0
+  dag_nohc  nodes=2562+2563 build=320.1us diff=640.3us compile=406.7us fwd=2.21ms bwd=4.05ms total=6.25ms (p90 6.52ms) ops=7691 live=32.0KiB malloc=443.9KiB grad_ok=1 err=0
+  torch     fwd=4.12ms bwd=14.71ms total=18.73ms (p90 20.31ms) fwd_nograd=1.51ms ops=6157 peak_malloc=1.8MiB
+  tree      fwd_nodes=2562 grad_nodes=0 created=2000001 build=413.1us diff=480.81ms bytes=340.2KiB CAPPED
+chain(n=8,depth=1024)
+  dag       nodes=5122+4100 build=2.73ms diff=2.76ms compile=1.20ms fwd=5.26ms bwd=7.99ms total=13.25ms (p90 17.16ms) ops=12302 live=64.0KiB malloc=884.5KiB grad_ok=1 err=0
+  dag_nohc  nodes=5122+5123 build=909.9us diff=1.43ms compile=973.0us fwd=5.12ms bwd=9.28ms total=14.44ms (p90 15.04ms) ops=15371 live=64.0KiB malloc=884.0KiB grad_ok=1 err=0
+  torch     fwd=10.45ms bwd=40.14ms total=50.27ms (p90 54.69ms) fwd_nograd=3.15ms ops=12301 peak_malloc=3.6MiB
+  tree      fwd_nodes=5122 grad_nodes=0 created=2000001 build=1.41ms diff=506.78ms bytes=680.2KiB CAPPED
+chain(n=8,depth=2048)
+  dag       nodes=10242+8196 build=5.07ms diff=8.30ms compile=4.38ms fwd=11.77ms bwd=18.56ms total=31.84ms (p90 47.34ms) ops=24590 live=128.0KiB malloc=1.7MiB grad_ok=1 err=0
+  dag_nohc  nodes=10242+10243 build=2.72ms diff=3.82ms compile=3.34ms fwd=14.39ms bwd=24.76ms total=39.29ms (p90 54.27ms) ops=30731 live=128.0KiB malloc=1.7MiB grad_ok=1 err=0
+  torch     fwd=24.42ms bwd=91.89ms total=119.24ms (p90 135.07ms) fwd_nograd=7.30ms ops=24589 peak_malloc=7.0MiB
+  tree      fwd_nodes=10242 grad_nodes=0 created=2000001 build=2.92ms diff=902.96ms bytes=1.3MiB CAPPED
+chain(n=8,depth=4096)
+  dag       nodes=20482+16388 build=23.40ms diff=31.83ms compile=14.80ms fwd=35.32ms bwd=58.18ms total=92.16ms (p90 104.17ms) ops=49166 live=256.0KiB malloc=3.5MiB grad_ok=1 err=0
+  dag_nohc  nodes=20482+20483 build=9.65ms diff=12.05ms compile=13.63ms fwd=29.91ms bwd=47.74ms total=78.35ms (p90 99.24ms) ops=61451 live=256.0KiB malloc=3.5MiB grad_ok=1 err=0
+  torch     fwd=48.16ms bwd=191.13ms total=241.89ms (p90 274.25ms) fwd_nograd=14.12ms ops=49165 peak_malloc=14.0MiB
+  tree      fwd_nodes=20482 grad_nodes=0 created=2000001 build=5.10ms diff=805.65ms bytes=2.7MiB CAPPED
+diamond(n=8,depth=16,width=4)
+  dag       nodes=242+308 build=70.7us diff=107.1us compile=39.1us fwd=160.1us bwd=378.3us total=544.3us (p90 735.3us) ops=814 live=2.6KiB malloc=33.8KiB grad_ok=1 err=0
+  dag_nohc  nodes=242+371 build=30.4us diff=65.0us compile=51.5us fwd=162.0us bwd=438.2us total=601.5us (p90 688.8us) ops=1003 live=2.6KiB malloc=33.4KiB grad_ok=1 err=0
+  torch     fwd=350.1us bwd=1.32ms total=1.68ms (p90 1.86ms) fwd_nograd=150.5us ops=733 peak_malloc=174.1KiB
+  tree      fwd_nodes=0 grad_nodes=0 created=2000001 build=391.81ms diff=0.0us bytes=0B CAPPED
+diamond(n=8,depth=64,width=4)
+  dag       nodes=962+1220 build=372.2us diff=717.9us compile=273.1us fwd=1.29ms bwd=2.56ms total=3.87ms (p90 4.59ms) ops=3214 live=10.1KiB malloc=139.8KiB grad_ok=1 err=0
+  dag_nohc  nodes=962+1475 build=122.1us diff=282.2us compile=208.2us fwd=857.5us bwd=2.46ms total=3.35ms (p90 3.62ms) ops=3979 live=10.1KiB malloc=139.2KiB grad_ok=1 err=0
+  torch     fwd=1.66ms bwd=5.96ms total=7.69ms (p90 9.85ms) fwd_nograd=1.39ms ops=2893 peak_malloc=727.4KiB
+  tree      fwd_nodes=0 grad_nodes=0 created=2000001 build=376.76ms diff=0.0us bytes=0B CAPPED
+diamond(n=8,depth=256,width=4)
+  dag       nodes=3842+4868 build=1.26ms diff=2.48ms compile=870.4us fwd=4.46ms bwd=9.06ms total=13.58ms (p90 14.60ms) ops=12814 live=40.1KiB malloc=560.0KiB grad_ok=1 err=0
+  dag_nohc  nodes=3842+5891 build=653.9us diff=1.37ms compile=965.1us fwd=4.66ms bwd=11.05ms total=15.98ms (p90 16.68ms) ops=15883 live=40.1KiB malloc=560.0KiB grad_ok=1 err=0
+  torch     fwd=8.60ms bwd=32.23ms total=40.87ms (p90 45.12ms) fwd_nograd=2.91ms ops=11533 peak_malloc=2.9MiB
+  tree      fwd_nodes=0 grad_nodes=0 created=2000001 build=422.22ms diff=0.0us bytes=0B CAPPED
+diamond(n=8,depth=1024,width=4)
+  dag       nodes=15362+19460 build=11.19ms diff=19.88ms compile=10.06ms fwd=22.45ms bwd=42.26ms total=65.60ms (p90 80.56ms) ops=51214 live=160.1KiB malloc=2.2MiB grad_ok=1 err=0
+  dag_nohc  nodes=15362+23555 build=5.42ms diff=10.46ms compile=11.59ms fwd=22.82ms bwd=46.82ms total=72.39ms (p90 96.96ms) ops=63499 live=160.1KiB malloc=2.2MiB grad_ok=1 err=0
+  torch     fwd=42.77ms bwd=153.23ms total=199.00ms (p90 234.69ms) fwd_nograd=12.58ms ops=46093 peak_malloc=11.6MiB
+  tree      fwd_nodes=0 grad_nodes=0 created=2000001 build=433.85ms diff=0.0us bytes=0B CAPPED
+mlp(batch=4,in=8,hidden=8,out=8,layers=8)
+  dag       nodes=48+69 build=19.6us diff=30.0us compile=12.5us fwd=49.8us bwd=164.4us total=215.3us (p90 347.6us) ops=296 live=2.9KiB malloc=11.6KiB grad_ok=1 err=0
+  dag_nohc  nodes=48+78 build=7.0us diff=14.5us compile=11.1us fwd=73.3us bwd=231.8us total=305.7us (p90 405.6us) ops=321 live=2.9KiB malloc=11.2KiB grad_ok=1 err=0
+  torch     fwd=90.2us bwd=379.1us total=486.7us (p90 578.4us) fwd_nograd=39.7us ops=281 peak_malloc=29.7KiB
+  tree      fwd_nodes=94 grad_nodes=13153 created=13247 build=20.7us diff=2.61ms bytes=1.8MiB
+mlp(batch=4,in=8,hidden=8,out=8,layers=32)
+  dag       nodes=168+237 build=57.8us diff=93.4us compile=39.7us fwd=191.7us bwd=745.7us total=958.7us (p90 1.16ms) ops=1040 live=9.7KiB malloc=49.5KiB grad_ok=1 err=0
+  dag_nohc  nodes=168+270 build=22.6us diff=46.6us compile=34.2us fwd=186.8us bwd=727.6us total=952.6us (p90 1.02ms) ops=1137 live=9.7KiB malloc=48.4KiB grad_ok=1 err=0
+  torch     fwd=297.6us bwd=1.35ms total=1.71ms (p90 1.85ms) fwd_nograd=138.6us ops=977 peak_malloc=130.7KiB
+  tree      fwd_nodes=334 grad_nodes=342801 created=343135 build=62.5us diff=55.81ms bytes=46.6MiB
+mlp(batch=4,in=8,hidden=8,out=8,layers=128)
+  dag       nodes=648+909 build=183.0us diff=327.1us compile=119.4us fwd=768.6us bwd=2.52ms total=3.32ms (p90 3.62ms) ops=4016 live=36.7KiB malloc=202.3KiB grad_ok=1 err=0
+  dag_nohc  nodes=648+1038 build=77.0us diff=183.3us compile=102.6us fwd=919.1us bwd=3.26ms total=4.34ms (p90 4.96ms) ops=4401 live=36.7KiB malloc=202.6KiB grad_ok=1 err=0
+  torch     fwd=2.32ms bwd=9.32ms total=11.72ms (p90 12.64ms) fwd_nograd=1.05ms ops=3761 peak_malloc=555.0KiB
+  tree      fwd_nodes=1294 grad_nodes=0 created=2000001 build=336.1us diff=579.08ms bytes=179.9KiB CAPPED
+wrote 208 rows to results/results.csv
