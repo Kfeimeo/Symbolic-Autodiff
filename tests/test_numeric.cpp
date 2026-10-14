@@ -288,3 +288,39 @@ TEST(tree_backward_matches_dag_numerically) {
     REQUIRE(compare(eval_tree(*tg.grads[i], inputs), ref.grads[i], kRtol, kAtol).allclose);
   }
 }
+
+TEST(executor_runs_on_cuda_when_available) {
+  // Device plumbing: inputs on CUDA => constants and all values on CUDA, and
+  // the result matches the CPU run. Skipped (passes) without a GPU.
+  if (!torch::cuda::is_available()) return;
+  TaskParams p;
+  p.task = "mlp";
+  p.batch = 8;
+  p.in = 16;
+  p.hidden = 16;
+  p.out = 4;
+  p.depth = 2;
+  auto cpu_inputs = make_task_inputs(p, 5, at::kCPU);
+  auto gpu_inputs = make_task_inputs(p, 5, at::Device("cuda"));
+  Graph g;
+  GraphBuilder b(g);
+  DagBackend be{b, p.dtype};
+  NodeId loss = build_task(be, p);
+  auto gr = backward(b, loss, g.inputs());
+  std::vector<NodeId> outs{loss};
+  outs.insert(outs.end(), gr.grads.begin(), gr.grads.end());
+  SLP prog = compile(g, outs);
+  Executor cpu(prog), gpu(prog);
+  cpu.bind_inputs(cpu_inputs);
+  gpu.bind_inputs(gpu_inputs);
+  cpu.run();
+  gpu.run();
+  REQUIRE(gpu.device().is_cuda());
+  REQUIRE(gpu.value(loss).device().is_cuda());
+  for (size_t i = 0; i < gr.grads.size(); ++i) {
+    REQUIRE(gpu.value(gr.grads[i]).device().is_cuda());
+    REQUIRE(compare(gpu.value(gr.grads[i]).cpu(), cpu.value(gr.grads[i]), 1e-4, 1e-5).allclose);
+  }
+  auto ref = torch_reference(p, gpu_inputs);
+  REQUIRE(compare(gpu.value(loss).cpu(), ref.loss.cpu(), 1e-4, 1e-5).allclose);
+}

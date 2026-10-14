@@ -27,8 +27,18 @@ struct TorchBackend {
   }
 };
 
-// Deterministic input tensors for a task (fixed seed).
-std::vector<torch::Tensor> make_task_inputs(const TaskParams& p, uint64_t seed);
+// Deterministic input tensors for a task (fixed seed), generated on the CPU
+// and moved to `device`.
+std::vector<torch::Tensor> make_task_inputs(const TaskParams& p, uint64_t seed,
+                                            at::Device device = at::kCPU);
+// Parses "cpu" / "cuda" / "cuda:N"; throws if CUDA is requested but absent.
+at::Device parse_device(const std::string& name);
+// Waits for all queued work on `device` (no-op on CPU).
+void synchronize(at::Device device);
+// Peak bytes allocated by the device caching allocator since the last reset
+// (CUDA only; returns false when not available).
+bool device_allocator_peak(at::Device device, uint64_t& peak_bytes);
+void device_allocator_reset_peak(at::Device device);
 
 // Fresh autograd leaves sharing the data of `inputs`.
 std::vector<torch::Tensor> make_leaves(const std::vector<torch::Tensor>& inputs);

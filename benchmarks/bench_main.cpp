@@ -37,6 +37,8 @@ struct Options {
   bool malloc_stable = false; // disable glibc mmap/trim so freed memory is reused
   bool verbose = false;
   std::string dtype = "f32";
+  std::string device = "cpu";
+  at::Device dev = at::kCPU;
   // Single configuration overrides (--task selects this mode).
   std::string task;
   int64_t n = -1, batch = -1, in = -1, hidden = -1, out = -1;
@@ -63,6 +65,7 @@ Row base_row(const TaskParams& p, const Options& o, const char* backend) {
   r.set("threads", o.threads);
   r.set("repeats", o.repeats);
   r.set("warmup", o.warmup);
+  r.set("device", o.device);
   r.set("torch_first", o.torch_first);
   r.set("malloc_stable", o.malloc_stable);
   return r;
@@ -164,8 +167,10 @@ Row run_dag(const TaskParams& p, const Options& o, bool hashcons,
   // First (cold) execution of the unified program.
   Executor ex(full);
   ex.bind_inputs(inputs);
+  synchronize(o.dev);
   t.reset();
   ex.run();
+  synchronize(o.dev);
   r.set("first_exec_us", t.us());
 
   // Correctness against the autograd reference.
@@ -192,10 +197,13 @@ Row run_dag(const TaskParams& p, const Options& o, bool hashcons,
   std::vector<double> fwd_s, bwd_s, tot_s;
   for (int i = 0; i < o.warmup + o.repeats; ++i) {
     ex.reset();
+    synchronize(o.dev);
     Timer tt;
     ex.run_range(0, split);
+    synchronize(o.dev);
     const double f = tt.us();
     ex.run_range(split, full.num_ops());
+    synchronize(o.dev);
     const double tot = tt.us();
     if (i >= o.warmup) {
       fwd_s.push_back(f);
@@ -213,20 +221,26 @@ Row run_dag(const TaskParams& p, const Options& o, bool hashcons,
   std::vector<double> fo_s;
   for (int i = 0; i < o.warmup + o.repeats; ++i) {
     exf.reset();
+    synchronize(o.dev);
     Timer tt;
     exf.run();
+    synchronize(o.dev);
     if (i >= o.warmup) fo_s.push_back(tt.us());
   }
   set_summary(r, "fwd_only", summarize(fo_s));
 
   // Instrumented pass: ATen operator invocations, live bytes, malloc peak.
   ex.reset();
+  device_allocator_reset_peak(o.dev);
   {
     OpProfileScope scope(true);
     ex.run(true);
+    synchronize(o.dev);
     OpProfile prof = scope.result();
     r.set("aten_ops_full", prof.aten_ops);
     r.set("peak_malloc_delta_bytes", prof.peak_malloc_delta());
+    uint64_t dev_peak = 0;
+    if (device_allocator_peak(o.dev, dev_peak)) r.set("peak_device_alloc_bytes", dev_peak);
   }
   r.set("peak_live_bytes", ex.stats().peak_live_bytes);
   r.set("peak_live_values", ex.stats().peak_live_values);
@@ -236,6 +250,7 @@ Row run_dag(const TaskParams& p, const Options& o, bool hashcons,
   {
     OpProfileScope scope(true);
     exf.run(true);
+    synchronize(o.dev);
     OpProfile prof = scope.result();
     r.set("aten_ops_fwd", prof.aten_ops);
     r.set("peak_malloc_delta_fwd_bytes", prof.peak_malloc_delta());
@@ -253,11 +268,13 @@ Row run_torch(const TaskParams& p, const Options& o, const std::vector<torch::Te
   auto leaves = make_leaves(inputs);
 
   // First (cold) forward + backward.
+  synchronize(o.dev);
   Timer t;
   {
     TorchBackend be{leaves};
     torch::Tensor loss = build_task(be, p);
     auto grads = torch::autograd::grad({loss}, leaves, {}, false, false, true);
+    synchronize(o.dev);
   }
   r.set("first_exec_us", t.us());
 
@@ -267,11 +284,14 @@ Row run_torch(const TaskParams& p, const Options& o, const std::vector<torch::Te
   for (int i = 0; i < o.warmup + o.repeats; ++i) {
     loss.reset();
     grads.clear();
+    synchronize(o.dev);
     Timer tt;
     TorchBackend be{leaves};
     loss = build_task(be, p);
+    synchronize(o.dev);
     const double f = tt.us();
     grads = torch::autograd::grad({loss}, leaves, {}, false, false, true);
+    synchronize(o.dev);
     const double tot = tt.us();
     if (i >= o.warmup) {
       fwd_s.push_back(f);
@@ -287,9 +307,11 @@ Row run_torch(const TaskParams& p, const Options& o, const std::vector<torch::Te
   for (int i = 0; i < o.warmup + o.repeats; ++i) {
     loss.reset();
     torch::NoGradGuard ng;
+    synchronize(o.dev);
     Timer tt;
     TorchBackend be{inputs};
     loss = build_task(be, p);
+    synchronize(o.dev);
     if (i >= o.warmup) nograd_s.push_back(tt.us());
   }
   set_summary(r, "fwd_only", summarize(nograd_s));
@@ -297,14 +319,18 @@ Row run_torch(const TaskParams& p, const Options& o, const std::vector<torch::Te
   // Instrumented passes.
   loss.reset();
   grads.clear();
+  device_allocator_reset_peak(o.dev);
   {
     OpProfileScope scope(true);
     TorchBackend be{leaves};
     loss = build_task(be, p);
     grads = torch::autograd::grad({loss}, leaves, {}, false, false, true);
+    synchronize(o.dev);
     OpProfile prof = scope.result();
     r.set("aten_ops_full", prof.aten_ops);
     r.set("peak_malloc_delta_bytes", prof.peak_malloc_delta());
+    uint64_t dev_peak = 0;
+    if (device_allocator_peak(o.dev, dev_peak)) r.set("peak_device_alloc_bytes", dev_peak);
   }
   loss.reset();
   grads.clear();
@@ -411,8 +437,9 @@ void run_config(const TaskParams& p, const Options& o, CsvTable& csv, const std:
                 bool quiet = false) {
   if (!quiet) std::printf("%s\n", p.label().c_str());
   std::fflush(stdout);
-  auto inputs = make_task_inputs(p, o.seed);
+  auto inputs = make_task_inputs(p, o.seed, o.dev);
   TorchResult ref = torch_reference(p, inputs);
+  synchronize(o.dev);
 
   std::vector<Row> rows;
   if (o.torch_first) rows.push_back(run_torch(p, o, inputs));
@@ -548,7 +575,7 @@ void usage() {
       "usage: sad_bench [--suite all|quick|chain|sharing|diamond|nn|mlp|scaling] [--csv path]\n"
       "                 [--threads N] [--repeats N] [--warmup N] [--tree-cap N] [--seed N]\n"
       "                 [--graph-repeats N] [--dtype f32|f64] [--skip-tree] [--skip-nohc]\n"
-      "                 [--torch-first] [--malloc-stable]\n"
+      "                 [--torch-first] [--malloc-stable] [--device cpu|cuda|cuda:N]\n"
       "       single configuration: --task chain|sharing|diamond|nn|mlp [--n N] [--depth N]\n"
       "                 [--width N] [--sharing N] [--batch N] [--in N] [--hidden N] [--out N]\n");
 }
@@ -574,6 +601,7 @@ int main(int argc, char** argv) {
     else if (a == "--tree-cap") o.tree_cap = std::stoull(next());
     else if (a == "--seed") o.seed = std::stoull(next());
     else if (a == "--dtype") o.dtype = next();
+    else if (a == "--device") o.device = next();
     else if (a == "--graph-repeats") o.graph_repeats = std::stoi(next());
     else if (a == "--torch-first") o.torch_first = true;
     else if (a == "--malloc-stable") o.malloc_stable = true;
@@ -595,6 +623,12 @@ int main(int argc, char** argv) {
     }
   }
   const DType dt = o.dtype == "f64" ? DType::Float64 : DType::Float32;
+  try {
+    o.dev = parse_device(o.device);
+  } catch (const std::exception& e) {
+    std::fprintf(stderr, "error: %s\n", e.what());
+    return 2;
+  }
   if (o.malloc_stable && !make_malloc_stable()) {
     std::printf("note: --malloc-stable has no effect on this platform's allocator\n");
     o.malloc_stable = false;
@@ -605,9 +639,13 @@ int main(int argc, char** argv) {
   at::set_num_threads(o.threads);
   at::set_num_interop_threads(1);
   torch::manual_seed(o.seed);
-  std::printf("libtorch %s, threads=%d, repeats=%d, warmup=%d, dtype=%s, tree_cap=%llu\n",
-              TORCH_VERSION, at::get_num_threads(), o.repeats, o.warmup, o.dtype.c_str(),
+  std::printf("libtorch %s, device=%s, threads=%d, repeats=%d, warmup=%d, dtype=%s, tree_cap=%llu\n",
+              TORCH_VERSION, o.device.c_str(), at::get_num_threads(), o.repeats, o.warmup, o.dtype.c_str(),
               static_cast<unsigned long long>(o.tree_cap));
+  if (o.dev.is_cuda()) {
+    std::printf("cuda device: %s (timers synchronize before and after every measured region)\n",
+                torch::cuda::is_available() ? "available" : "unavailable");
+  }
 
   // Silent warm-up so that the first measured configuration does not pay for
   // lazy initialisation (thread pool, allocator, page faults).

@@ -2,9 +2,13 @@
 
 #include "sad/executor.hpp"
 
+#if defined(SAD_WITH_CUDA)
+#include <c10/cuda/CUDACachingAllocator.h>
+#endif
+
 namespace sad {
 
-std::vector<torch::Tensor> make_task_inputs(const TaskParams& p, uint64_t seed) {
+std::vector<torch::Tensor> make_task_inputs(const TaskParams& p, uint64_t seed, at::Device device) {
   torch::manual_seed(seed);
   std::vector<torch::Tensor> out;
   const auto opts = torch::TensorOptions().dtype(to_aten(p.dtype));
@@ -23,9 +27,45 @@ std::vector<torch::Tensor> make_task_inputs(const TaskParams& p, uint64_t seed) 
     } else if (p.task == "diamond" && spec.role == "w") {
       t = t / std::sqrt(static_cast<double>(p.width));
     }
-    out.push_back(t.contiguous());
+    out.push_back(t.contiguous().to(device));
   }
   return out;
+}
+
+at::Device parse_device(const std::string& name) {
+  if (name == "cpu") return at::Device(at::kCPU);
+  if (name.rfind("cuda", 0) == 0) {
+    if (!torch::cuda::is_available()) {
+      throw std::runtime_error("device '" + name + "' requested but CUDA is not available in this LibTorch build / machine");
+    }
+    return at::Device(name);
+  }
+  throw std::runtime_error("unknown device: " + name);
+}
+
+void synchronize(at::Device device) {
+  if (device.is_cuda()) torch::cuda::synchronize(device.index());
+}
+
+bool device_allocator_peak(at::Device device, uint64_t& peak_bytes) {
+#if defined(SAD_WITH_CUDA)
+  if (device.is_cuda()) {
+    const auto stats = c10::cuda::CUDACachingAllocator::getDeviceStats(device.index());
+    peak_bytes = static_cast<uint64_t>(stats.allocated_bytes[0].peak);
+    return true;
+  }
+#endif
+  (void)device;
+  peak_bytes = 0;
+  return false;
+}
+
+void device_allocator_reset_peak(at::Device device) {
+#if defined(SAD_WITH_CUDA)
+  if (device.is_cuda()) c10::cuda::CUDACachingAllocator::resetPeakStats(device.index());
+#else
+  (void)device;
+#endif
 }
 
 std::vector<torch::Tensor> make_leaves(const std::vector<torch::Tensor>& inputs) {
@@ -52,7 +92,8 @@ at::Tensor eval_tree(const TreeNode& n, const std::vector<torch::Tensor>& inputs
   if (n.op == OpCode::Input) return inputs.at(n.attrs.input_index);
   at::Tensor operands[4];
   for (size_t i = 0; i < n.kids.size(); ++i) operands[i] = eval_tree(*n.kids[i], inputs);
-  return dispatch(n.op, n.attrs, n.shape, n.dtype, operands, n.kids.size());
+  const at::Device dev = inputs.empty() ? at::Device(at::kCPU) : inputs.front().device();
+  return dispatch(n.op, n.attrs, n.shape, n.dtype, operands, n.kids.size(), dev);
 }
 
 Closeness compare(const torch::Tensor& got, const torch::Tensor& ref, double rtol, double atol) {

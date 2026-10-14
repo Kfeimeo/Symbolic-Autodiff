@@ -15,8 +15,9 @@ at::ScalarType to_aten(DType dt);
 DType from_aten(at::ScalarType st);
 
 // Pure ATen dispatch of one operator (shared with the tree evaluator).
+// `device` is only used by operand-less ops (Constant).
 at::Tensor dispatch(OpCode op, const Attrs& attrs, const Shape& shape, DType dtype,
-                    const at::Tensor* operands, size_t n_operands);
+                    const at::Tensor* operands, size_t n_operands, at::Device device);
 
 struct ExecStats {
   uint64_t instructions = 0;      // SLP instructions dispatched
@@ -30,7 +31,9 @@ class Executor {
  public:
   explicit Executor(const SLP& program);
 
+  // All inputs must live on one device; the executor adopts it.
   void bind(NodeId input, at::Tensor t);
+  at::Device device() const { return device_; }
   void bind_inputs(const std::vector<at::Tensor>& in_order);  // program.inputs order
 
   // Executes the whole program. With track_memory the (slower) storage
@@ -53,6 +56,8 @@ class Executor {
   void on_release(const at::Tensor& t);
 
   const SLP& p_;
+  at::Device device_ = at::kCPU;
+  bool device_set_ = false;
   std::vector<at::Tensor> vals_;
   std::vector<uint32_t> instr_of_;
   ExecStats stats_;

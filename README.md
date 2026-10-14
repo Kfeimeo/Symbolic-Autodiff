@@ -45,7 +45,7 @@ for the plots.
 scripts/setup_libtorch.sh            # downloads LibTorch CPU into third_party/libtorch
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release   # or -DCMAKE_PREFIX_PATH=/path/to/libtorch
 cmake --build build -j$(nproc)
-./build/sad_tests                    # 22 unit tests
+./build/sad_tests                    # 23 unit tests
 ./build/sad_bench --suite quick      # a fast sanity benchmark
 ```
 
@@ -78,10 +78,21 @@ scaling micro-benchmark.
 sad_bench [--suite all|quick|chain|sharing|diamond|nn|mlp|scaling] [--csv path]
           [--threads N] [--repeats N] [--warmup N] [--graph-repeats N] [--tree-cap N]
           [--seed N] [--dtype f32|f64] [--skip-tree] [--skip-nohc]
-          [--torch-first] [--malloc-stable]
+          [--torch-first] [--malloc-stable] [--device cpu|cuda|cuda:N]
 sad_bench --task chain|sharing|diamond|nn|mlp [--n N] [--depth N] [--width N] [--sharing N]
           [--batch N] [--in N] [--hidden N] [--out N] ...      # one configuration
 ```
+
+`--device cuda` runs every backend on the GPU: the inputs are generated on
+the CPU with the fixed seed and moved over, the executor adopts the device of
+its bound inputs (constants are created there too), every timed region is
+bracketed by `torch::cuda::synchronize`, and the `peak_device_alloc_bytes`
+column reports the CUDA caching allocator's peak. It needs a CUDA LibTorch
+build (`scripts/setup_libtorch.sh 2.14.1 cu126`, or the matching Windows
+zip); with a CPU build the flag is refused with a clear message. The GPU path
+compiles and the CPU path is tested here, but no GPU measurements were taken:
+this environment has no GPU. RecordFunction operator counts work on both
+devices; the glibc malloc columns then only reflect host-side allocations.
 
 `--malloc-stable` (used by `run_benchmarks.sh`) raises glibc's mmap and trim
 thresholds so freed tensor memory stays in the process. Without it, the

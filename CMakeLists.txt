@@ -15,6 +15,14 @@ if(NOT DEFINED CMAKE_PREFIX_PATH AND EXISTS "${CMAKE_SOURCE_DIR}/third_party/lib
 endif()
 find_package(Torch REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+# CUDA-specific code (caching allocator statistics) is compiled only when the
+# LibTorch build ships CUDA libraries; everything else is device agnostic.
+if(TORCH_CUDA_LIBRARIES OR TORCH_LIBRARIES MATCHES "cuda")
+  message(STATUS "LibTorch has CUDA: enabling SAD_WITH_CUDA")
+  add_compile_definitions(SAD_WITH_CUDA=1)
+else()
+  message(STATUS "LibTorch without CUDA: --device cuda will be unavailable")
+endif()
 
 if(MSVC)
   add_compile_options(/W4 /wd4100 /wd4244 /wd4267 /wd4251 /wd4275 /bigobj /EHsc)

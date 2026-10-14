@@ -288,4 +288,6 @@ munmap 归还给内核，下一轮前向重新触页；后运行的后端继承�
   报告触顶前的节点数和耗时，不外推。
 * 建图 / 微分时间的中位数来自同一进程内 5 个新图，受进程内堆状态影响；`sad_scaling` 在独立进程中的
   数据作为交叉验证。
-* 只测了 CPU、float32、4 线程、一种 CPU；GPU 未实现。
+* 只测了 CPU、float32、4 线程、一种 CPU。代码支持 `--device cuda`（执行器按输入所在设备运行，计时前后
+  同步，报告 CUDA caching allocator 峰值），但本环境没有 GPU、LibTorch 也是 CPU 版，所以没有任何 GPU
+  测量数据；GPU 上的结论需要另行实测，预期 kernel launch 延迟会改变小张量区间的对比。

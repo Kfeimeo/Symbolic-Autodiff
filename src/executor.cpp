@@ -25,10 +25,11 @@ DType from_aten(at::ScalarType st) {
 }
 
 at::Tensor dispatch(OpCode op, const Attrs& attrs, const Shape& shape, DType dtype,
-                    const at::Tensor* v, size_t n) {
+                    const at::Tensor* v, size_t n, at::Device device) {
   switch (op) {
     case OpCode::Constant:
-      return at::full(at::IntArrayRef(shape), attrs.value, at::TensorOptions().dtype(to_aten(dtype)));
+      return at::full(at::IntArrayRef(shape), attrs.value,
+                      at::TensorOptions().dtype(to_aten(dtype)).device(device));
     case OpCode::Add: return at::add(v[0], v[1]);
     case OpCode::Mul: return at::mul(v[0], v[1]);
     case OpCode::MatMul: return at::matmul(v[0], v[1]);
@@ -58,6 +59,12 @@ void Executor::bind(NodeId input, at::Tensor t) {
   if (n.op != OpCode::Input) throw std::logic_error("bind: node is not an Input");
   if (t.sizes() != at::IntArrayRef(n.shape) || t.scalar_type() != to_aten(n.dtype)) {
     throw std::logic_error("bind: tensor shape/dtype does not match Input " + shape_str(n.shape));
+  }
+  if (!device_set_) {
+    device_ = t.device();
+    device_set_ = true;
+  } else if (t.device() != device_) {
+    throw std::logic_error("bind: all inputs must be on the same device");
   }
   vals_[input] = std::move(t);
 }
@@ -113,7 +120,7 @@ void Executor::run_range(size_t begin, size_t end, bool track_memory) {
     const Instr& ins = p_.instrs[k];
     const Node& n = g.node(ins.dst);
     for (size_t j = 0; j < n.inputs.size(); ++j) operands[j] = vals_[n.inputs[j]];
-    at::Tensor out = dispatch(n.op, n.attrs, n.shape, n.dtype, operands, n.inputs.size());
+    at::Tensor out = dispatch(n.op, n.attrs, n.shape, n.dtype, operands, n.inputs.size(), device_);
     for (size_t j = 0; j < n.inputs.size(); ++j) operands[j].reset();
     ++stats_.instructions;
     if (tracking_) on_define(out);
